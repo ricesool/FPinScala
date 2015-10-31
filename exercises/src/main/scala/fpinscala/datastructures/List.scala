@@ -37,6 +37,7 @@ object List { // `List` companion object. Contains functions for creating and wo
       case Cons(h,t) => Cons(h, append(t, a2))
     }
 
+  //@annotation.tailrec
   def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
     as match {
       case Nil => z
@@ -49,20 +50,85 @@ object List { // `List` companion object. Contains functions for creating and wo
   def product2(ns: List[Double]) =
     foldRight(ns, 1.0)(_ * _) // `_ * _` is more concise notation for `(x,y) => x * y`; see sidebar
 
+  def tail[A](l: List[A]): List[A] =
+    l match {
+      case Nil => Nil
+      case Cons(x, xs) => xs
+    }
 
-  def tail[A](l: List[A]): List[A] = sys.error("todo")
+  def setHead[A](l: List[A], h: A): List[A] =
+    l match {
+      case Nil => sys.error("empty list does not have head")
+      case Cons(_,t) => Cons(h,t)
+    }
 
-  def setHead[A](l: List[A], h: A): List[A] = sys.error("todo")
+  def drop[A](l: List[A], n: Int): List[A] =
+    n match {
+      case x if x < 0 => sys.error("n is minus value")
+      case 0 => l
+      case _ => l match {
+        case Nil => sys.error("drop head on empty list")
+        case Cons(_,t) => drop(t, n-1)
+      }
+    }
+  // 예외를 안던지는 버젼으로 다시
+  def dropS[A](l: List[A], n: Int): List[A] =
+    if (n<=0) Nil
+    else l match {
+      case Nil => Nil
+      case Cons(_,t) => dropS(t, n-1)
+    }
 
-  def drop[A](l: List[A], n: Int): List[A] = sys.error("todo")
+  def dropWhile[A](l: List[A], f: A => Boolean): List[A] =
+    l match {
+      case Nil => Nil
+      case Cons(x,xs) => if (f(x)) dropWhile(xs, f) else l
+    }
+  // 답 한 번 보고 다시. 이게 더 직관적이네
+  def dropWhileR[A](l: List[A], f: A => Boolean): List[A] =
+    l match {
+      case Cons(h,t) if f(h) => dropWhileR(t, f)
+      case _ => l // Nil 도 포함
+    }
 
-  def dropWhile[A](l: List[A], f: A => Boolean): List[A] = sys.error("todo")
+  def init[A](l: List[A]): List[A] =
+    l match {
+      case Cons(h,t) if (t != Nil) => Cons(h,init(t))
+      case _ => Nil
+    }
+  def initWithException[A](l: List[A]): List[A] =
+  l match {
+    case Nil => sys.error ("init of empty list")
+    case Cons(h, Nil) => Nil
+    case Cons(h, t) => Cons(h, initWithException(t))
+  }
 
-  def init[A](l: List[A]): List[A] = sys.error("todo")
+  /*
+  Example 3.8 : List(1,2,3)을 그대로 리턴하지만 마지막까지 훑는데 n=3만큼의 시간이 필요하다.
+   */
 
-  def length[A](l: List[A]): Int = sys.error("todo")
+  // Example 3.9
+  def length[A](l: List[A]): Int =
+    foldRight(l, 0)((_,n) => 1+n)
 
-  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = sys.error("todo")
+  @annotation.tailrec
+  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B =
+    l match {
+      case Nil => z
+      case Cons(x, xs) => foldLeft(xs, f(z,x))(f)
+    }
 
   def map[A,B](l: List[A])(f: A => B): List[B] = sys.error("todo")
+}
+
+object TestList {
+  import List._
+
+  def main(args: Array[String]): Unit = {
+    val input = List(1,2,3)
+    val result = foldRight(input, Nil:List[Int])(Cons(_,_))
+    println(result)
+    println(input.hashCode())
+    println(result.hashCode())
+  }
 }
